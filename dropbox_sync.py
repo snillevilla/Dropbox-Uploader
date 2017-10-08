@@ -3,7 +3,7 @@ import subprocess
 from subprocess import Popen, PIPE
 
 #The directory to sync
-syncdir="/home/pi/ftp/cctv/"
+syncdirs = ["/home/homeassistant/.homeassistant/", "/home/pi/otau/"];
 #Path to the Dropbox-uploaded shell script
 uploader = "/home/pi/Dropbox-Uploader/dropbox_uploader.sh"
 
@@ -106,4 +106,5 @@ def upload_files(path, level):
 
 
 #Start
-upload_files("",1)
+for syncdir in syncdirs
+    upload_files("",1)
