@@ -124,5 +124,5 @@ def upload_files(path, level):
 
 
 #Start
-for syncdir in syncdirs
+for syncdir in syncdirs:
     upload_files("",1)
