@@ -3,7 +3,7 @@ import subprocess
 from subprocess import Popen, PIPE
 
 #The directory to sync
-syncdirs = ["/home/homeassistant/.homeassistant/", "/home/pi/otau/"];
+syncdirs = ["/home/homeassistant/.homeassistant/", "/home/pi/otau/", "/home/pi/deconz-dev-2.04.78.deb"];
 #Path to the Dropbox-uploaded shell script
 uploader = "/home/pi/Dropbox-Uploader/dropbox_uploader.sh"
 
@@ -54,52 +54,70 @@ def upload_file(localPath, remotePath):
 def upload_files(path, level):
     fullpath = os.path.join(syncdir,path)
     print_output("Syncing " + fullpath,level)
-    if not os.path.exists(fullpath):
-        print_output("Path not found: " + path, level)
-    else:
-
-        #Get a list of file/dir in the path
-        filesAndDirs = os.listdir(fullpath)
-
-        #Group files and directories
-
-        files = list()
-        dirs = list()
-
-        for file in filesAndDirs:
-            filepath = os.path.join(fullpath,file)
-            if os.path.isfile(filepath):
-                files.append(file)
-            if os.path.isdir(filepath):
-                dirs.append(file)
-
-        print_output(str(len(files)) + " Files, " + str(len(dirs)) + " Directories",level)
-
-        #If the path contains files and we don't want to override get a list of files in dropbox
-        if len(files) > 0 and overwrite == 0:
+    if os.path.isfile(syncdir):
+        if not os.path.exists(syncdir):
+            print_output("Path not found: " + syncdir)
+        else:
+            print_output("Found File: " + syncdir)
             dfiles = list_files(path)
+            if upload == 1 and (overwrite == 1 or not syncdir in dfiles):
+                    fullFilePath = os.path.join(fullpath,syncdir)
+                    relativeFilePath = os.path.join(path,syncdir)
+                    print_output("Uploading File: " + syncdir,level+1)
+                    if upload_file(fullFilePath, relativeFilePath) == 1:
+                        print_output("Uploaded File: " + syncdir,level + 1)
+                        if deleteLocal == 1:
+                            print_output("Deleting File: " + syncdir,level + 1)
+                            os.remove(fullFilePath)
+                    else:
+                        print_output("Error Uploading File: " + syncdir,level + 1)
+    else : 
+        if not os.path.exists(fullpath):
+            print_output("Path not found: " + path, level)
+        else:
 
-        #Loop through the files to check to upload
-        for f in files:
-            print_output("Found File: " + f,level)
-            if upload == 1 and (overwrite == 1 or not f in dfiles):
-                fullFilePath = os.path.join(fullpath,f)
-                relativeFilePath = os.path.join(path,f)
-                print_output("Uploading File: " + f,level+1)
-                if upload_file(fullFilePath, relativeFilePath) == 1:
-                    print_output("Uploaded File: " + f,level + 1)
-                    if deleteLocal == 1:
-                        print_output("Deleting File: " + f,level + 1)
-                        os.remove(fullFilePath)
-                else:
-                    print_output("Error Uploading File: " + f,level + 1)
+            #Get a list of file/dir in the path
+            filesAndDirs = os.listdir(fullpath)
 
-        #If recursive loop through the directories
-        if recursive == 1:
-            for d in dirs:
-                print_output("Found Directory: " + d, level)
-                relativePath = os.path.join(path,d)
-                upload_files(relativePath, level + 1)
+            #Group files and directories
+
+            files = list()
+            dirs = list()
+
+            for file in filesAndDirs:
+                filepath = os.path.join(fullpath,file)
+                if os.path.isfile(filepath):
+                    files.append(file)
+                if os.path.isdir(filepath):
+                    dirs.append(file)
+
+            print_output(str(len(files)) + " Files, " + str(len(dirs)) + " Directories",level)
+
+            #If the path contains files and we don't want to override get a list of files in dropbox
+            if len(files) > 0 and overwrite == 0:
+                dfiles = list_files(path)
+
+            #Loop through the files to check to upload
+            for f in files:
+                print_output("Found File: " + f,level)
+                if upload == 1 and (overwrite == 1 or not f in dfiles):
+                    fullFilePath = os.path.join(fullpath,f)
+                    relativeFilePath = os.path.join(path,f)
+                    print_output("Uploading File: " + f,level+1)
+                    if upload_file(fullFilePath, relativeFilePath) == 1:
+                        print_output("Uploaded File: " + f,level + 1)
+                        if deleteLocal == 1:
+                            print_output("Deleting File: " + f,level + 1)
+                            os.remove(fullFilePath)
+                    else:
+                        print_output("Error Uploading File: " + f,level + 1)
+
+            #If recursive loop through the directories
+            if recursive == 1:
+                for d in dirs:
+                    print_output("Found Directory: " + d, level)
+                    relativePath = os.path.join(path,d)
+                    upload_files(relativePath, level + 1)
 
 
 
